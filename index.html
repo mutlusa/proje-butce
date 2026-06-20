@@ -1,0 +1,367 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Zebra Mimarlık — Şantiye & Bütçe Yönetimi</title>
+    <meta name="description" content="Zebra Mimarlık Şantiye Takip ve Proje Bütçe Yönetim Sistemi">
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🏗️</text></svg>">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons+Round" rel="stylesheet">
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <!-- Toast Container -->
+    <div id="toast-container"></div>
+
+    <div class="app-container">
+        <!-- Sidebar -->
+        <nav class="sidebar" id="sidebar">
+            <div class="sidebar-top">
+                <div class="logo">
+                    <div class="logo-icon">
+                        <span class="material-icons-round">domain</span>
+                    </div>
+                    <div class="logo-text">
+                        <h2>Zebra Mimarlık</h2>
+                        <span class="logo-subtitle">Şantiye Takip</span>
+                    </div>
+                </div>
+                <button class="mobile-close" id="mobile-close" onclick="document.getElementById('sidebar').classList.remove('open')">
+                    <span class="material-icons-round">close</span>
+                </button>
+            </div>
+            <ul class="nav-links">
+                <li class="active" data-view="dashboard">
+                    <a href="#" onclick="app.switchView('dashboard', event)">
+                        <span class="material-icons-round">dashboard</span>
+                        <span>Ana Sayfa</span>
+                    </a>
+                </li>
+                <li data-view="projects">
+                    <a href="#" onclick="app.switchView('projects', event)">
+                        <span class="material-icons-round">apartment</span>
+                        <span>Projeler</span>
+                    </a>
+                </li>
+                <li data-view="suppliers">
+                    <a href="#" onclick="app.switchView('suppliers', event)">
+                        <span class="material-icons-round">group</span>
+                        <span>Tedarikçiler & Cari</span>
+                    </a>
+                </li>
+                <li data-view="expenses">
+                    <a href="#" onclick="app.switchView('expenses', event)">
+                        <span class="material-icons-round">receipt_long</span>
+                        <span>Genel Giderler</span>
+                    </a>
+                </li>
+            </ul>
+            <div class="sidebar-bottom">
+                <button class="sidebar-action-btn export-btn" onclick="app.exportData()">
+                    <span class="material-icons-round">cloud_download</span>
+                    <span>Yedek İndir</span>
+                </button>
+                <button class="sidebar-action-btn import-btn" onclick="document.getElementById('import-file').click()">
+                    <span class="material-icons-round">cloud_upload</span>
+                    <span>Yedek Yükle</span>
+                </button>
+                <input type="file" id="import-file" style="display:none;" accept=".json" onchange="app.importData(event)">
+                <button class="sidebar-action-btn danger-action-btn" onclick="app.openModal('modal-reset-confirm')">
+                    <span class="material-icons-round">delete_forever</span>
+                    <span>Verileri Sil</span>
+                </button>
+            </div>
+        </nav>
+
+        <!-- Mobile Header -->
+        <div class="mobile-header">
+            <button class="hamburger" onclick="document.getElementById('sidebar').classList.add('open')">
+                <span class="material-icons-round">menu</span>
+            </button>
+            <h2>Zebra Mimarlık</h2>
+        </div>
+
+        <!-- Main Content -->
+        <main class="main-content">
+            
+            <!-- VIEW: DASHBOARD -->
+            <div id="view-dashboard" class="view active">
+                <header class="top-header">
+                    <div class="header-left">
+                        <h1>Genel Durum</h1>
+                        <p class="header-date" id="header-date"></p>
+                    </div>
+                </header>
+
+                <section class="summary-cards">
+                    <div class="card glass-panel card-income">
+                        <div class="card-icon"><span class="material-icons-round">trending_up</span></div>
+                        <div class="card-body">
+                            <h3>Müşterilerden Alınan</h3>
+                            <p class="amount" id="dash-income">₺0</p>
+                        </div>
+                    </div>
+                    <div class="card glass-panel card-expense">
+                        <div class="card-icon"><span class="material-icons-round">trending_down</span></div>
+                        <div class="card-body">
+                            <h3>Ödenen Toplam</h3>
+                            <p class="amount" id="dash-paid">₺0</p>
+                        </div>
+                    </div>
+                    <div class="card glass-panel card-balance">
+                        <div class="card-icon"><span class="material-icons-round">account_balance_wallet</span></div>
+                        <div class="card-body">
+                            <h3>Genel Kasa</h3>
+                            <p class="amount" id="dash-kasa">₺0</p>
+                        </div>
+                    </div>
+                    <div class="card glass-panel card-debt">
+                        <div class="card-icon"><span class="material-icons-round">warning_amber</span></div>
+                        <div class="card-body">
+                            <h3>Şantiye Toplam Borç</h3>
+                            <p class="amount" id="dash-debt">₺0</p>
+                        </div>
+                    </div>
+                </section>
+
+                <section class="quick-transaction glass-panel">
+                    <div class="section-header">
+                        <span class="material-icons-round section-icon">bolt</span>
+                        <h2>Hızlı İşlem Girişi</h2>
+                    </div>
+                    <form id="qt-form" onsubmit="app.saveTransaction(event)" class="inline-form">
+                        <input type="hidden" id="qt-trans-id">
+                        <div class="form-group" style="grid-column: 1 / -1;">
+                            <label for="qt-type">İşlem Türü</label>
+                            <select id="qt-type" required onchange="app.handleQtTypeChange()" class="highlight-select">
+                                <option value="payment">Tedarikçiye Ödeme Yapıldı (− Kasa)</option>
+                                <option value="cost">Tedarikçiye Hakediş/Maliyet Ekle (+ Borç)</option>
+                                <option value="yevmiye">Yevmiye Hakedişi Ekle (+ Borç)</option>
+                                <option value="income">Müşteriden Ödeme Alındı (+ Kasa)</option>
+                                <option value="general_expense">Genel Gider — Ofis vb. (− Kasa)</option>
+                            </select>
+                        </div>
+                        <div class="form-group" id="qt-project-group">
+                            <label for="qt-project">Proje</label>
+                            <select id="qt-project" onchange="app.handleQtProjectChange()"></select>
+                        </div>
+                        <div class="form-group" id="qt-supplier-group">
+                            <label for="qt-supplier">Tedarikçi</label>
+                            <select id="qt-supplier" onchange="app.handleQtSupplierChange()"></select>
+                        </div>
+                        <div class="form-group" id="qt-days-group" style="display:none;">
+                            <label for="qt-days" id="qt-days-label">Kişi / Gün Sayısı</label>
+                            <input type="number" id="qt-days" min="0.1" step="0.1" placeholder="Örn: 3" oninput="app.calculateYevmiye()">
+                        </div>
+                        <div class="form-group">
+                            <label for="qt-amount">Tutar (₺)</label>
+                            <input type="number" id="qt-amount" required min="1" placeholder="50.000">
+                        </div>
+                        <div class="form-group">
+                            <label for="qt-date">Tarih</label>
+                            <input type="date" id="qt-date" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="qt-desc">Açıklama</label>
+                            <input type="text" id="qt-desc" placeholder="Kısa açıklama…">
+                        </div>
+                        <div class="form-group btn-group">
+                            <button type="submit" class="btn primary-btn full-width" id="qt-submit-btn">
+                                <span class="material-icons-round" style="font-size:18px;vertical-align:middle;margin-right:4px;">save</span>
+                                İşlemi Kaydet
+                            </button>
+                            <button type="button" class="btn ghost-btn full-width" style="display:none; margin-top:6px;" id="qt-cancel-btn" onclick="app.cancelEdit()">
+                                <span class="material-icons-round" style="font-size:18px;vertical-align:middle;margin-right:4px;">close</span>
+                                İptal
+                            </button>
+                        </div>
+                    </form>
+                </section>
+
+                <section class="recent-transactions glass-panel">
+                    <div class="section-header">
+                        <span class="material-icons-round section-icon">history</span>
+                        <h2>Son 15 İşlem</h2>
+                    </div>
+                    <div class="table-container" style="max-height: 300px;">
+                        <table class="data-table">
+                            <thead>
+                                <tr>
+                                    <th>Tarih</th>
+                                    <th>Açıklama</th>
+                                    <th>Proje / Tedarikçi</th>
+                                    <th>Tür</th>
+                                    <th>Tutar</th>
+                                </tr>
+                            </thead>
+                            <tbody id="dash-today-tbody"></tbody>
+                        </table>
+                    </div>
+                </section>
+            </div>
+
+            <!-- VIEW: PROJECTS -->
+            <div id="view-projects" class="view">
+                <header class="top-header">
+                    <h1>Projeler & Şantiye Kasaları</h1>
+                    <div class="actions">
+                        <button class="btn primary-btn" onclick="app.openModal('modal-new-project')">
+                            <span class="material-icons-round" style="font-size:18px;vertical-align:middle;margin-right:4px;">add</span>
+                            Yeni Proje
+                        </button>
+                        <button class="btn secondary-btn" onclick="app.openModal('modal-assign-supplier')">
+                            <span class="material-icons-round" style="font-size:18px;vertical-align:middle;margin-right:4px;">person_add</span>
+                            Tedarikçi Ata
+                        </button>
+                    </div>
+                </header>
+                <div id="projects-list"></div>
+            </div>
+
+            <!-- VIEW: SUPPLIERS -->
+            <div id="view-suppliers" class="view">
+                <header class="top-header">
+                    <h1>Tedarikçi Carileri</h1>
+                    <div class="actions">
+                        <button class="btn primary-btn" onclick="app.openModal('modal-new-supplier')">
+                            <span class="material-icons-round" style="font-size:18px;vertical-align:middle;margin-right:4px;">add</span>
+                            Yeni Tedarikçi
+                        </button>
+                    </div>
+                </header>
+                <div class="suppliers-grid" id="suppliers-list"></div>
+            </div>
+
+            <!-- VIEW: EXPENSES -->
+            <div id="view-expenses" class="view">
+                <header class="top-header">
+                    <h1>Genel Gider Raporları</h1>
+                </header>
+                <div id="expenses-list"></div>
+            </div>
+        </main>
+    </div>
+
+    <!-- MODALS -->
+
+    <!-- New Project -->
+    <div class="modal-overlay" id="modal-new-project">
+        <div class="modal glass-panel">
+            <div class="modal-header">
+                <h2><span class="material-icons-round" style="vertical-align:middle;margin-right:8px;">apartment</span>Yeni Proje</h2>
+                <button class="close-btn" onclick="app.closeModal('modal-new-project')">
+                    <span class="material-icons-round">close</span>
+                </button>
+            </div>
+            <form onsubmit="app.addProject(event)">
+                <div class="form-group">
+                    <label>Proje Adı</label>
+                    <input type="text" id="new-proj-name" required placeholder="Örn: A Villası">
+                </div>
+                <button type="submit" class="btn primary-btn full-width">Oluştur</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- New Supplier -->
+    <div class="modal-overlay" id="modal-new-supplier">
+        <div class="modal glass-panel">
+            <div class="modal-header">
+                <h2><span class="material-icons-round" style="vertical-align:middle;margin-right:8px;">person_add</span>Yeni Tedarikçi</h2>
+                <button class="close-btn" onclick="app.closeModal('modal-new-supplier')">
+                    <span class="material-icons-round">close</span>
+                </button>
+            </div>
+            <form onsubmit="app.addGlobalSupplier(event)">
+                <div class="form-group">
+                    <label>Ad Soyad / Firma Ünvanı</label>
+                    <input type="text" id="new-sup-name" required placeholder="Örn: İsmail Beton">
+                </div>
+                <button type="submit" class="btn primary-btn full-width">Oluştur</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Assign Supplier to Project -->
+    <div class="modal-overlay" id="modal-assign-supplier">
+        <div class="modal glass-panel">
+            <div class="modal-header">
+                <h2><span class="material-icons-round" style="vertical-align:middle;margin-right:8px;">link</span>Projeye Tedarikçi Ata</h2>
+                <button class="close-btn" onclick="app.closeModal('modal-assign-supplier')">
+                    <span class="material-icons-round">close</span>
+                </button>
+            </div>
+            <form onsubmit="app.assignSupplierToProject(event)">
+                <div class="form-group">
+                    <label>Proje</label>
+                    <select id="assign-proj" required></select>
+                </div>
+                <div class="form-group">
+                    <label>Tedarikçi</label>
+                    <select id="assign-sup" required></select>
+                </div>
+                <div class="form-group checkbox-group">
+                    <label class="checkbox-label">
+                        <input type="checkbox" id="assign-is-yevmiye" onchange="app.handleAssignTypeChange()">
+                        <span class="checkbox-text">Bu tedarikçi yevmiye usulü çalışacak</span>
+                    </label>
+                </div>
+                <div class="form-group" id="assign-cost-group">
+                    <label>Sözleşme Bedeli / İlk Maliyet</label>
+                    <input type="number" id="assign-cost" min="0" placeholder="0">
+                </div>
+                <div class="form-group" id="assign-wage-group" style="display:none;">
+                    <label>Günlük Yevmiye Ücreti</label>
+                    <input type="number" id="assign-wage" min="0" placeholder="0">
+                </div>
+                <button type="submit" class="btn secondary-btn full-width">Atamayı Kaydet</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- History Modal -->
+    <div class="modal-overlay" id="modal-history">
+        <div class="modal glass-panel large-modal">
+            <div class="modal-header">
+                <h2 id="hist-title">Hesap Dökümü</h2>
+                <button class="close-btn" onclick="app.closeModal('modal-history')">
+                    <span class="material-icons-round">close</span>
+                </button>
+            </div>
+            <div class="table-container">
+                <table class="data-table">
+                    <thead>
+                        <tr>
+                            <th>Tarih</th>
+                            <th>Açıklama</th>
+                            <th>Proje</th>
+                            <th>İşlem</th>
+                            <th>Tutar</th>
+                            <th>Aksiyon</th>
+                        </tr>
+                    </thead>
+                    <tbody id="hist-tbody"></tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- Reset Modal -->
+    <div class="modal-overlay" id="modal-reset-confirm">
+        <div class="modal glass-panel" style="text-align: center; max-width: 380px;">
+            <div class="reset-icon">
+                <span class="material-icons-round" style="font-size:48px; color:var(--danger);">warning</span>
+            </div>
+            <h2 style="color:var(--danger); margin-bottom:8px;">Dikkat!</h2>
+            <p style="margin-bottom: 24px; line-height:1.6; color:var(--text-muted);">Tüm veriler kalıcı olarak silinecektir.<br>Gerçekten silmek istediğinize emin misiniz?</p>
+            <div style="display:flex; gap:12px;">
+                <button class="btn ghost-btn full-width" onclick="app.closeModal('modal-reset-confirm')">İptal</button>
+                <button class="btn danger-btn full-width" onclick="app.resetDataConfirm()">Evet, Sil</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="app.js"></script>
+</body>
+</html>
