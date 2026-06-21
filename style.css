@@ -242,6 +242,11 @@ body {
     color: var(--danger);
 }
 
+.cloud-btn:hover {
+    background: rgba(46, 204, 113, 0.08);
+    color: #2ecc71;
+}
+
 /* Mobile Header */
 .mobile-header {
     display: none;
@@ -1111,3 +1116,109 @@ body {
         grid-template-columns: 1fr;
     }
 }
+
+/* ============ CLOUD SYNC BADGE & SETTINGS ============ */
+
+.cloud-status-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 3px 8px;
+    border-radius: 12px;
+    font-size: 10px;
+    font-weight: 600;
+    transition: all var(--transition);
+    border: 1px solid transparent;
+}
+
+/* Local Mode / Offline Style */
+.cloud-status-badge.local {
+    background: rgba(255, 255, 255, 0.05);
+    color: var(--text-muted);
+    border-color: rgba(255, 255, 255, 0.08);
+}
+.cloud-status-badge.local .status-dot {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: var(--text-muted);
+    opacity: 0.6;
+}
+
+/* Connected / Synced Style */
+.cloud-status-badge.synced {
+    background: rgba(46, 204, 113, 0.1);
+    color: #2ecc71;
+    border-color: rgba(46, 204, 113, 0.2);
+}
+.cloud-status-badge.synced .status-dot {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: #2ecc71;
+    box-shadow: 0 0 8px #2ecc71;
+    animation: pulse-green 2s infinite;
+}
+
+/* Error / Sync Failed Style */
+.cloud-status-badge.error {
+    background: rgba(231, 76, 60, 0.1);
+    color: var(--danger);
+    border-color: rgba(231, 76, 60, 0.2);
+}
+.cloud-status-badge.error .status-dot {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: var(--danger);
+    box-shadow: 0 0 8px var(--danger);
+    animation: pulse-red 2s infinite;
+}
+
+@keyframes pulse-green {
+    0% {
+        transform: scale(0.95);
+        box-shadow: 0 0 0 0 rgba(46, 204, 113, 0.7);
+    }
+    70% {
+        transform: scale(1);
+        box-shadow: 0 0 0 5px rgba(46, 204, 113, 0);
+    }
+    100% {
+        transform: scale(0.95);
+        box-shadow: 0 0 0 0 rgba(46, 204, 113, 0);
+    }
+}
+
+@keyframes pulse-red {
+    0% {
+        transform: scale(0.95);
+        box-shadow: 0 0 0 0 rgba(231, 76, 60, 0.7);
+    }
+    70% {
+        transform: scale(1);
+        box-shadow: 0 0 0 5px rgba(231, 76, 60, 0);
+    }
+    100% {
+        transform: scale(0.95);
+        box-shadow: 0 0 0 0 rgba(231, 76, 60, 0);
+    }
+}
+
+.cloud-guide pre {
+    user-select: all;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.cloud-guide a:hover {
+    color: var(--primary-glow) !important;
+}
+
+/* Make toggle switch look nice */
+.cloud-settings-body input[type="checkbox"] {
+    width: 16px;
+    height: 16px;
+    accent-color: var(--primary);
+    cursor: pointer;
+}
+
